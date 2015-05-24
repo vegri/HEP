@@ -16,7 +16,6 @@ bool CheckCrossFct(float x, float y);
 float GetGaus(float x, float mu, float sig);
 float GetCrossFctComplete(float x);
 bool CheckCrossFctComplete(float x, float y);
-float GetRndGaus(float mu, float sigma);
 bool CheckGaus(float x, float y, float mu, float sigma);
 float GetRndGaus(float mu, float xmin, float xmax, float sigma);
 float GetEvents(float a, float lumi); //lumi in inverse pb
@@ -33,20 +32,22 @@ TRandom3 tr3;
 int main(int argc, char *argv[]) {
 	cout << argv[0] << endl;
 
-	int numberIterations=1e6;
-	if(argc > 1){
-		numberIterations=atoi(argv[1]);
+	int numberIterations = 1e6;
+	if (argc > 1) {
+		numberIterations = atoi(argv[1]);
 	}
-
 
 	//tr3 = new TRandom3();
 
 	//A1.(i)
 	TH1F histogramGaus("histogramGaus",
-			"Gausverteilung um #pi/2 mit #sigma=0.1", numberIterations/100, (M_PI / 2) - 0.6,
-			(M_PI / 2) + 0.6);
+			"Gausverteilung um #pi/2 mit #sigma=0.1", numberIterations / 100,
+			(M_PI / 2) - 0.6, (M_PI / 2) + 0.6);
+	const float mu = M_PI / 2;
+	float xmin = mu - 5 * SIGMA;
+	float xmax = mu + 5 * SIGMA;
 	for (int i = 0; i < iterations; i++) {
-		xRndGaus = GetRndGaus(M_PI / 2, SIGMA);
+		xRndGaus = GetRndGaus(mu, xmin, xmax, SIGMA);
 		histogramGaus.Fill(xRndGaus);
 	}
 
@@ -55,10 +56,12 @@ int main(int argc, char *argv[]) {
 	TH1F histogramTheta("histogramTheta",
 			"Normalverteilung for 0.5 #leq #theta #leq 2.8", 1000, 0, 2.5);
 	TH1F histogramThetaFehler("histogramThetaFehler",
-			"Faltung Gaus mit Normalverteilung, ", numberIterations/100, 0, 2.5);
+			"Faltung Gaus mit Normalverteilung, ", 1000, 0, 2.5);
 	for (int i = 0; i < iterations; i++) {
 		theta = tr3.Rndm() * 1.5 + 0.5;
-		thetaRec = GetRndGaus(theta, SIGMA);
+		xmin = theta - 5 * SIGMA;
+		xmax = theta + 5 * SIGMA;
+		thetaRec = GetRndGaus(theta, xmin, xmax, SIGMA);
 		histogramTheta.Fill(theta);
 		histogramThetaFehler.Fill(thetaRec);
 	}
@@ -66,7 +69,8 @@ int main(int argc, char *argv[]) {
 	//A1.(iii)
 	// Integration von thete > 1.8 bis
 	// Integriere von (pi/2)-0.1 bis (pi/2)+0.1
-	i_a = (2 * M_PI) * GetIntegralTheta(1.8, M_PI - 0.05, 0, 8, numberIterations, SIGMA); //Integral über Phi =*2pi
+	i_a = (2 * M_PI)
+			* GetIntegralTheta(1.8, M_PI - 0.05, 0, 8, numberIterations, SIGMA); //Integral über Phi =*2pi
 	cout << "(i) A= " << i_a << endl;
 	i_events = GetEvents(i_a, 2000);
 	cout << "Number of Events: " << i_events << endl;
@@ -196,55 +200,44 @@ float GetIntegralTheta(float thetaMin, float thetaMax, float ymin, float ymax,
 	for (int i = 0; i < loopnumber; i++) {
 		//cout << "NUMBER = " << i << endl;
 
-		theta = tr3.Rndm();
-		theta = theta * dTheta + thetaMin;
+		theta = tr3.Rndm() * dTheta + thetaMin;
 		//cout << "theta = " << theta << endl;
-		y = tr3.Rndm();
-		y = y * dy + ymin;
+		y = tr3.Rndm() * dy + ymin;
 		//cout << "y = " << y << endl;
-		xmin = thetaMin - 5*sigma;
-		xmax = thetaMax + 5*sigma;
+		xmin = theta - 5 * sigma;
+		xmax = theta + 5 * sigma;
 		x = GetRndGaus(theta, xmin, xmax, sigma);
 		//cout << "x = " << x << endl;
 		if (CheckCrossFctComplete(x, y)) {
 			accepted++;
 		}
 	}
-	integral = (((float) accepted ) / (float) loopnumber) * dTheta * dy;
+	integral = (((float) accepted) / (float) loopnumber) * dTheta * dy;
 	cout << "Integralwert: " << integral << endl;
 	return integral;
 }
 
 // Funktionen für Gaußverteilung
 float GetGaus(float x, float mu, float sig) {
-	return 1/(sig*sqrt(2*M_PI))*exp(
-			-0.5 * (x - mu) * (x - mu) / (sig * sig));
+	return 1 / (sig * sqrt(2 * M_PI))
+			* exp(-0.5 * (x - mu) * (x - mu) / (sig * sig));
 }
 
 bool CheckGaus(float x, float y, float mu, float sigma) {
-	if (abs(x-mu)<5*sigma && y < GetGaus(x, mu, sigma)) {
+	if (y < GetGaus(x, mu, sigma)) {
 		return true;
 	}
 	return false;
 }
 
-// Funktion die Zufallszahl nach Gaus erzeugt
-float GetRndGaus(float mu, float sigma) {
-	float xRnd = 0.;
-	float yRnd = 0.;
-	do {
-		xRnd = tr3.Rndm() * 2 * M_PI;
-		yRnd = tr3.Rndm()/(sigma*sqrt(2*M_PI));
-	} while (!CheckGaus(xRnd, yRnd, mu, sigma));
-	return xRnd;
-}
-
 float GetRndGaus(float mu, float xmin, float xmax, float sigma) {
 	float xRnd = 0.;
 	float yRnd = 0.;
+	const float width = xmax - xmin;
 	do {
-		xRnd = tr3.Rndm() * 2 * M_PI;
-		yRnd = tr3.Rndm()/(sigma*sqrt(2*M_PI));
-	} while (!CheckGaus(xRnd, yRnd, mu, sigma) && xRnd < xmax && xRnd > xmin);
+		xRnd = width * tr3.Rndm() + xmin;
+		yRnd = tr3.Rndm() / (sigma * sqrt(2 * M_PI));
+	} while (!CheckGaus(xRnd, yRnd, mu, sigma));
+
 	return xRnd;
 }

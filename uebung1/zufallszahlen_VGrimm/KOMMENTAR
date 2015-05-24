@@ -1,0 +1,9 @@
+Die optimalen Zahlen (siehe RandomNumbersOptimal) habe ich wohl in der Vorlesung falsch 
+abgeschrieben, da die Zahlen alles andere (!) als gleichverteilt sind.
+Da sind die von mir zufälligen Zahlen in RandomNumbersVersuch2 und RandomNumbersVersuch3 schon
+besser, obwohl man eindeutig Felder ausmachen kann, in denen sich die Verteilungen deutlich 
+unterscheiden (bei Versuch3 noch weniger als bei Versuch2).
+RandomNumbersVersuch4 ist das Wie-Man-Es-Nicht-Machen-Sollte-Beispiel aus der Vorlesung und der
+Name ist Programm.
+Sowohl TRandom2 als auch 3 schlagen die selbstgebastelen Zufallszahlen, obwohl TRandom 3 nochmal
+deutlich gleichverteilter erscheint als TRandom2.

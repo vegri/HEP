@@ -1,0 +1,5 @@
+Für kleine Dichten steigt die relative Anzahl der verbrannten Bäume an, was
+darauf zurückzuführen ist, dass, um den Wald in Brand zu stecken, der erste 
+Baum im Grid gesucht und angezündet wird. Für eine sehr kleine Anzahl von 
+Bäumen ist schon ein brennender Baum ein hoher Prozentsatz, daher geht die 
+Verteilung hoch.
